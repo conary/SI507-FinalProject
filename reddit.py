@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import requests
 import requests_oauthlib
+import requests.auth
 import webbrowser
 import json
 import secret_data
@@ -31,7 +32,11 @@ REDIRECT_URI = 'https://www.programsinformationpeople.org/runestone/oauth' # Thi
 TOKEN_URL = 'https://ssl.reddit.com/api/v1/access_token'
 #SCOPE = ['identity','flair','read']
 SCOPE = ['identity']
-TYPE = 'code'
+TYPE = ['code']
+
+
+
+
 
 
 def create_state_string(size=6, chars=string.ascii_uppercase + string.digits):
@@ -42,38 +47,79 @@ STATE = create_state_string(10)
 # Set up sessions and so on to get data via OAuth2 protocol...
 
 #oauth2inst = requests_oauthlib.OAuth2Session(client_id=CLIENT_ID, response_type=TYPE, state=STATE, redirect_uri=REDIRECT_URI, scope=SCOPE) # Create an instance of an OAuth2Session
-oauth2inst = requests_oauthlib.OAuth2Session(client_id=CLIENT_ID, redirect_uri=REDIRECT_URI, scope=SCOPE) # Create an instance of an OAuth2Session
+#oauth2inst = requests_oauthlib.OAuth2Session(client_id=CLIENT_ID, redirect_uri=REDIRECT_URI, scope=SCOPE) # Create an instance of an OAuth2Session
 
-authorization_url, state = oauth2inst.authorization_url(AUTHORIZATION_URL) # all we need for spotify\
-print(authorization_url)
+#authorization_url, state = oauth2inst.authorization_url(AUTHORIZATION_URL) 
+#print(authorization_url)
 
 
 
 
  
 
-webbrowser.open(authorization_url) # Opening auth URL for you to sign in to the Spotify service
-authorization_response = input('Authenticate and then enter the full callback URL: ').strip() # Need to get the full URL in order to parse the response
-
-# The OAuth2Session instance has a method that extracts what we need from the url, and helps do some other back and forth with spotify
+#webbrowser.open(authorization_url) 
+#authorization_response = input('Authenticate and then enter the full callback URL: ').strip() # Need to get the full URL in order to parse the response
 
 
 
 
-token = oauth2inst.fetch_token(TOKEN_URL, authorization_response=authorization_response, client_secret=CLIENT_SECRET, scope=SCOPE, client_id=CLIENT_ID, type=TYPE)
+
+
+def get_token():
+    client_auth = requests.auth.HTTPBasicAuth(CLIENT_ID, CLIENT_SECRET)
+    post_data = {"grant_type": "password", "username": "conary", "password": "bot123"}
+    headers = {"User-Agent": "conary/0.1"}
+    response = requests.post("https://www.reddit.com/api/v1/access_token", auth=client_auth, data=post_data, headers=headers)
+    cred = json.loads(response.text)
+    print(cred)
+    return cred['access_token']
+    
+
+def get_data(token, url):
+    headers = {"Authorization": "bearer 3E_eJvL2kwpvyKcSGuC8tVkKpo4", "User-Agent": "ChangeMeClient/0.1 by YourUsername"}
+    response = requests.get(url, headers=headers)
+    data = json.loads(response.text)
+ 
+    return data
+
+
+token = get_token()
+datas = get_data(token, 'https://oauth.reddit.com/api/v1/me/prefs')
+print (datas)
 
 
 
 
-print(token)
+
+#token = oauth2inst.fetch_token(TOKEN_URL, authorization_response=authorization_response, auth=client_auth, client_id=CLIENT_ID, scope=SCOPE)
+
+#token = oauth2inst.fetch_token(TOKEN_URL, authorization_response=authorization_response, auth=client_auth, scope=SCOPE, client_id=CLIENT_ID)
+
+#token = oauth2inst.fetch_token(TOKEN_URL, authorization_response=authorization_response, auth=client_auth, grant_type='authorization_code')
+
+
+
+
+
+# state: unique string for your own use
+# scope: 'identity'
+# client_id: The client_id assigned by reddit
+# redirect_uri: the redirect_uri you assigned.
+# code: the code received in step 4.
+# grant_type: 'authorization_code
+
+
+
+
+#print(token)
 ## On a web server, this would happen on your server, but we have to pull the token out so we can use it for a request inside a script we're running on a personal computer (with connection to internet)
 ## Anytime we want to get new data we have to do this -- so a caching system would have to take this into account any time the data expired.
 ## And for that -- we'd want to think about the API rate limits, primarily!
 
 # Now we can just use the get method on the oauth2session instance from here on out to make requests to spotify endpoints. Token will work for any endpoint, as long as it's still valid. (How long it is will depend from API to API)
-r = oauth2inst.get('https://www.reddit.com/api/v1/me')
-response_diction = json.loads(r.text)
-print(json.dumps(response_diction, indent=2)) # See the response printed neatly -- uncomment
+#r = oauth2inst.get('https://www.reddit.com/api/v1/me')
+#response_diction = json.loads(r.text)
+#print(json.dumps(response_diction, indent=2)) # See the response printed neatly -- uncomment
 
 ###########
 ## Of course, this code does not have a caching setup,
