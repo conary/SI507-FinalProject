@@ -89,7 +89,7 @@ def get_data(token, url):
 
 def get_subreddit(token, url, query):
     post_data = {"exact": "false", "include_over_18": "true", "include_unadvertisable": "false", "query":query} 
-    headers = {"Authorization": "bearer "+ token, "User-Agent": "conary/0.1"}
+    headers = {"Authorization": "bearer "+ token, "User-Agent": "osx:r/news.single.result:v0.1 (by /u/conary)"}
     response = requests.post(url, data=post_data, headers=headers)
     cred = json.loads(response.text)
     #print(cred)
@@ -97,44 +97,46 @@ def get_subreddit(token, url, query):
 
 
 def get_posts(token, url):
-    headers = {"Authorization": "bearer "+ token, "User-Agent": "conary/0.1"}
-    #print(headers)
+    headers = {"Authorization": "bearer "+ token, "User-Agent": "osx:r/news.single.result:v0.1 (by /u/conary)"}
     response = requests.get(url, headers=headers)
     #print(response)
     datas = json.loads(response.text)
+ 
+    print(datas)
     json_data = json.dumps(datas['data']['children'], indent=4, sort_keys=True)
-    
-    # data_all = json_data['data']['children']
-    # print(data_all)
-    # num_of_posts = 0
-    # while len(data_all) <= 100:
-    #     time.sleep(2)
-    #     last = data_all[-1]['data']['name']
-    #     urls = 'https://www.reddit.com/r/politics/.json?after=' + str(last)
-    #     req = requests.get(urls, headers=headers)
-    #     data = json.loads(req.text)
-    #     data_all += data['data']['children']
-    #     if num_of_posts == len(data_all):
-    #         break
-    #     else:
-    #         num_of_posts = len(data_all)
-    #return data_all
+    #print(json_data)
+    data_all = datas['data']['children']
+    #print(data_all)
+    num_of_posts = 0
+    while len(data_all) <= 100:
+        time.sleep(2)
+        last = data_all[-1]['data']['name']
+        print(last)
+        urls = 'https://www.reddit.com/r/news/.json?after=' + str(last)
+        req = requests.get(urls, headers=headers)
+        data = json.loads(req.text)
+        #data_all += data['data']['children']
+        if num_of_posts == len(data_all):
+            break
+        else:
+            num_of_posts = len(data_all)
+    return data_all
     return json_data
 
 
 
 
-
+#data_all += data.values()[1]['children']
 
 
 
 token = get_token()
 datas = get_data(token, 'https://oauth.reddit.com/api/v1/me/')
-print (datas)
+#print (datas)
 subs = get_subreddit(token, 'https://oauth.reddit.com/api/search_reddit_names', 'trump')
-print (subs)
-top_data = get_posts(token, 'https://oauth.reddit.com/r/politics/.json')
-print(top_data)
+#print (subs)
+top_data = get_posts(token, 'https://oauth.reddit.com/r/news/.json')
+#print(top_data)
 
 
 
